@@ -1,0 +1,190 @@
+#
+# WEEK 4 MINI PROJECT
+# "Stopwatch: The Game"
+#
+# There is no end to the running time in this game.
+# It will run indefinitely if you allow it; and end-game
+# was not specified in the rubric. That said, I do
+# accommodate the display of length of time in hours,
+# though the game display may glitch and error at some
+# point thereafter, who knows (untested).
+# 
+# As mentioned in the project description, the goal of
+# the game is to start, then stop, a timer on a tenths
+# value of 0, scoring a point. Score is tracked, as is
+# number of attempts to score. A reset button clears
+# everything so you can start over. 
+#
+
+# imports
+import math, simplegui
+
+# global vars
+# run_time: the displayed running time we play against
+# score: times we score
+# tries: times we tried to score
+run_time = 0
+score = 0
+tries = 0
+
+# define helper function format that converts time
+# in tenths of seconds into formatted string A:BC.D
+def format(t):
+    """
+    INPUT: the number of tenths of a second
+    OUTPUTS: returns a string formatted A:B.C, 
+    where A is minutes, B is seconds, and C is
+    tenths of a second. In the case of the game
+    running > one hour, it can return an output
+    A:B:C.D, where A is hours, B is minutes
+    C is seconds and D is tenths of a second.
+    
+    Double-digit output is zero-padded where
+    necessary, according to the grading rubric, 
+    also allowing for hours as is my prerogative.
+    """
+    
+    # put the tenths into the tenths variable
+    # so we can begin calculating the rest
+    tenths = t
+    
+    # break down the time value in tenths of a second
+    # into the corresponding seconds, minutes, even hours
+    secs = tenths // 10
+    tenths = tenths % 10
+    mins = secs // 60
+    secs = secs % 60
+    hrs = mins // 60
+    mins = mins % 60    
+
+    # if, for some reason, our time runs into hours,
+    # we're going to go ahead and return that 
+    # appropriately formatted, too, as is my option 
+    # for times > 10 mins, per grading rubric
+    if hrs > 0:
+        return str(hrs).rjust(2,"0") + ":" + str(mins).rjust(2,"0") + ":" + str(secs).rjust(2,"0") + "." + str(tenths)
+    else:
+        return str(mins) + ":" + str(secs).rjust(2,"0") + "." + str(tenths)
+    
+# event handlers for buttons "start", "stop", "reset"
+
+def start():
+    """ 
+    Starts the timer if not already running. 
+    """
+    
+    # only start the timer if it's stopped
+    if not(timer.is_running()):
+        timer.start()
+
+def stop():
+    """ 
+    Stops the timer, increments number of tries,
+    and checks for scoring condition, incrementing
+    score as necessary. 
+    """
+    
+    #globals    
+    global score, tries
+    
+    # only stop the timer if it's running
+    if timer.is_running():
+        timer.stop()
+        tries += 1
+        
+        # check for stop on 0 tenths, the
+        # scoring condition, and update score
+        # as necessary
+        if run_time % 10 == 0:
+            score += 1
+            # display "score!" message
+            score_timer.start()
+
+def reset():
+    """
+    Stops the timer, resets running time, score,
+    and number of scoring attempts made.
+    """
+    
+    #globals
+    global run_time, score, tries
+    
+    # only stop the timer if it's running
+    if timer.is_running():
+        timer.stop()
+    
+    # reset running time, score, and score attempts
+    run_time = 0
+    score = 0
+    tries = 0    
+
+def timer_handler():
+    """
+    Every tenth of a second, this increments our timer
+    variable for the game
+    """
+    
+    #globals
+    global run_time
+    
+    # timer fires every tenth of a second, so
+    # we're adding a tenth to our running time
+    # variable here each time it fires
+    run_time += 1
+    
+def score_timer_handler():
+    """ 
+    Ends the display of "score!" message after 1 second 
+    (it's a 1-second timer).
+    """
+    #stops the timer
+    score_timer.stop()
+
+# define draw handler
+def draw(canvas):
+    
+    # darker grey background (text will be white)
+    frame.set_canvas_background('#505050')
+    
+    # display score and number of tries as we play,
+    # centered across the canvas
+    scoretext = str(score) + "/" + str(tries)
+    canvas.draw_text(scoretext, [200-frame.get_canvas_textwidth(scoretext, 20, 'monospace'),20],15,'White','monospace')
+    
+    # some formatting of the time display if we 
+    # end up with a timer/game going into hours,
+    # keeping it centered across the canvas
+    runtime_text = format(run_time)
+    if run_time >= 36000:
+        canvas.draw_text(runtime_text, [100-(frame.get_canvas_textwidth(runtime_text, 30, 'monospace')/2),110],30,'White','monospace')
+    else:
+        canvas.draw_text(runtime_text, [100-(frame.get_canvas_textwidth(runtime_text, 30, 'monospace')/2),110],30,'White','monospace')
+    
+    # flashes a score! message when a score is made. 
+    # score timer fires and stops it after 1 second,
+    # centered across canvas
+    if score_timer.is_running():
+        canvas.draw_text("Score!", [100-(frame.get_canvas_textwidth("Score!", 30, 'monospace')/2),170],30,'White','monospace')
+
+# create frame and its accessories
+frame = simplegui.create_frame("Stopwatch", 200,200)
+frame.add_label("Stopwatch: The Game!")
+frame.add_label("") #whitespace
+frame.add_button("Start", start, 100)
+frame.add_button("Stop", stop, 100)
+frame.add_label("") #whitespace
+frame.add_button("Reset", reset, 100)
+
+# create timer, register event and timer handlers
+# game timer fires every tenth of a second (100ms)
+# when active; score timer, 1 second (1000ms)
+frame.set_draw_handler(draw)
+timer = simplegui.create_timer(100,timer_handler)
+score_timer = simplegui.create_timer(1000,score_timer_handler)
+
+# start frame
+frame.start()
+
+print "Thanks for checking out my project! :)"
+
+########## END ############
