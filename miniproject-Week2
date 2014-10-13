@@ -1,0 +1,182 @@
+##################################################
+#
+# Rock-paper-scissors-lizard-Spock 
+#
+# We equate the strings "rock", "paper", "scissors", 
+# "lizard", "Spock" to numbers as follows:
+#
+# 0 - rock
+# 1 - Spock
+# 2 - paper
+# 3 - lizard
+# 4 - scissors
+#
+# the following is a list of numbers for subject and object
+# tabulated for use with the nums_to_verb() function
+# first column is the subject number of the winning choice, 
+# second is the object number of the losing choice
+#
+# 0-3 Rock crushes Lizard
+# 0-4 Rock crushes Scissors
+#
+# 1-0 Spock vaporizes Rock
+# 1-4 Spock smashes Scissors
+#
+# 2-0 Paper covers Rock
+# 2-1 Paper disproves Spock
+#
+# 3-1 Lizard poisons Spock
+# 3-2 Lizard eats Paper
+#
+# 4-2 Scissors cut Paper
+# 4-3 Scissors decapitate Lizard
+#
+#-------------------------------------------------
+# As noted in each of the relevant functions, I 
+# am assuming the inputs are all safely in-range,
+# as no provision for error-checking was indicated.
+#
+##################################################
+
+# lib imports
+
+import random
+
+# helper functions
+
+def name_to_number(name):
+    """ 
+    input: a string containing an object name 
+    output: returns an integer value corresponding
+    to the object name
+    
+    assuming safe inputs here.
+    """
+    
+    if name == "rock":
+        return 0
+    elif name == "Spock": 
+        return 1
+    elif name == "paper":
+        return 2
+    elif name == "lizard":
+        return 3
+    else:	      #scissors
+        return 4
+
+def number_to_name(number):
+    """
+    input: an integer representing an object
+    output: returns a string description of the 
+    corresponding object
+    
+    assuming safe inputs here.
+    """
+    
+    if number == 0:
+        return "rock"
+    elif number == 1:
+        return "Spock"
+    elif number == 2:
+        return "paper"
+    elif number == 3:
+        return "lizard"
+    else:
+        return "scissors"
+
+def nums_to_verb(winner_val, loser_val):
+    """
+    inputs: winner_val is an integer corresponding
+    to the winner's object, loser_val is an integer
+    corresponding to the loser's object
+    outputs: return a string containing the correct 
+    verb for the combination of objects.
+    -------------------------------------------------
+    I wanted to honor the original verbs for the game
+    in the program; hopefully no one objects to this!
+    -------------------------------------------------
+    The rock only has one verb, the others have two. 
+    We only check specific values for the first of 
+    each with two possible values, and reasonably 
+    assume the alternative if the first isn't a match.
+    
+    assuming safe inputs here.
+    """
+    
+    if winner_val == 0:  			#rock ONLY crushes
+        return "crushes"
+    elif winner_val == 1:			#Spock
+        if loser_val == 0:			
+            return "vaporizes"		#rock
+        else:						
+            return "smashes"		#scissors
+    elif winner_val == 2:			#paper
+        if loser_val == 0: 			
+            return "covers"			#rock
+        else:						
+            return "disproves"		#Spock
+    elif winner_val == 3:			#lizard
+        if loser_val == 1:			
+            return "poisons"		#Spock
+        else:						
+            return "eats"			#paper
+    else:							#scissors
+        if loser_val == 2:			
+            return "cut"			#paper
+        else:						
+            return "decapitate"		#lizard
+    
+def rpsls(player_choice):
+    """
+    input: player_choice is a string value representing the player's
+    choice of object to play each round
+    output: the output is a series of strings that display
+    the player's object choice, the computer's randomly-selected choice,
+    a line describing their "battle", using the proper game verbs, and finally,
+    a line declaring the player or the computer the winner (or declaring a tie
+    in the case of a tie)
+    """
+    
+    # print a blank line to separate consecutive games
+    print ""
+    
+    # convert the player's choice to player_number using the function name_to_number()
+    player_number = name_to_number(player_choice)
+    
+    # print out the message for the player's choice
+    print "Player chose " + player_choice + "." 
+    
+    # compute random guess for comp_number using random.randrange()
+    # comp_number should be an integer such that 
+    # 0 <= comp_number < 5, or 0 through 4.
+    comp_number = random.randrange(0,5)
+    
+    # convert comp_number to comp_choice using the function number_to_name()
+    comp_choice = number_to_name(comp_number)
+    
+    # print out the message for computer's choice
+    print "Computer chose " + comp_choice + "."
+    
+    # compute difference of comp_number and player_number modulo five
+    numdiff = (comp_number - player_number) % 5
+     
+    # assuming modulo value is correct, working from larger values to zero
+    # values range from 0 to 4. 3/4 = player wins, 1/2 = computer wins, 0 = tie
+    if numdiff > 2:
+        print "Player's " + player_choice + " " + nums_to_verb(player_number, comp_number) + " Computer's " + comp_choice + "!"
+        print "Player wins!"
+    elif numdiff > 0:
+        print "Computer's " + comp_choice + " " + nums_to_verb(comp_number, player_number) + " Player's " + player_choice + "!"
+        print "Computer wins!"
+    else:
+        print "Player and computer tie!"
+    
+# testing with various player choices
+
+rpsls("rock")
+rpsls("Spock")
+rpsls("paper")
+rpsls("lizard")
+rpsls("scissors")
+
+########## END
