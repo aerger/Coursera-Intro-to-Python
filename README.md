@@ -1,4 +1,4 @@
 Coursera-Intro-to-Python
 ========================
 
-Projects from the course taken at: https://www.coursera.org/course/interactivepython
+Projects I've done as part of the course taken at: https://www.coursera.org/course/interactivepython
