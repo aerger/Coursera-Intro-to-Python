@@ -1,0 +1,120 @@
+# "Guess the number" mini-project
+# 
+# input will come from buttons and an input field
+# all output for the game will be printed in the console
+
+# imports needed
+import math, random, simplegui
+
+# list of globals used
+# secret_number - the number we're trying to guess
+# num_guesses - number of guesses taken 
+# max_guesses - max guesses for a given range
+
+#default range for new game at program start
+the_range = 100
+
+# helper function to start and restart the game
+def new_game():
+    """
+    Sets the secret number, resets number of guesses made,
+    and calculates the max guesses based on given range.
+    Also displays some game-start text to get the game rolling.
+    """
+    
+    global secret_number, num_guesses, max_guesses
+    
+    # create the secret number, reset number of guesses,
+    # and set max guesses according to range selected
+    secret_number = random.randrange(0,the_range)
+    num_guesses = 0
+    max_guesses = int(math.ceil(math.log(the_range,2)))
+    
+    # Display a header for getting the game started
+    print ""
+    print "------- STARTING NEW GAME -------"
+    print "Enter your guess, in the range [0 - " + str(the_range) + ")."
+    print "You get " + str(max_guesses) + " tries!"
+    
+# define event handlers for control panel
+def range100():
+    """ 
+    button handler for changing the range to [0,100) and 
+    starts a new game.
+    """ 
+    
+    global the_range
+    
+    # set the range, start a new game
+    the_range = 100
+    new_game()
+    
+def range1000():
+    """ 
+    button handler for changing the range to [0,1000) and 
+    starts a new game.
+    """
+    
+    global the_range
+    
+    # set the range, start a new game
+    the_range = 1000
+    new_game()
+    
+def input_guess(guess):
+    """ 
+    input handler function that does all the work in the program, 
+    tracking guesses, comparing results, printing appropriate 
+    messages to the console.
+    """
+    
+    global num_guesses
+    
+    # convert input string to integer
+    the_guess = int(guess)
+    
+    # increment number of guesses
+    num_guesses += 1
+    
+    # display player guess, preceded by some whitespace for
+    # better readability
+    print
+    print "Your guess (" + str(num_guesses) + " of " + str(max_guesses) + ") is: " + str(guess) + "."
+    
+    # compare guess to secret number; print appropriate message
+    # if guess is correct, also restart the game
+    if the_guess < secret_number:
+        print "Too low!"
+    elif the_guess > secret_number:
+        print "Too high!"
+    else:
+        print "You win!"
+        new_game()
+        return
+    
+    # Check to see if we've made the max allowed number of guesses
+    # and end the current game with appropriate message.
+    # Running out of guesses immediately starts a new game
+    # otherwise display number of guesses remaining
+    if num_guesses >= max_guesses:
+        print""
+        print "You ran out of guesses!" 
+        print "The number was " + str(secret_number) + "! New game!"
+        new_game()
+    else:
+        print "You have " + str(max_guesses - num_guesses) + " guesses remaining." 
+    
+# create frame to display the game UI
+frame = simplegui.create_frame("Guess The Number", 200,200)
+
+# register event handlers for control elements and start frame
+frame.add_label("Guess The Number!")
+frame.add_button("Range = [0,100)",range100)
+frame.add_button("Range = [0,1000)",range1000)
+frame.add_input("Enter guess:", input_guess,50)
+frame.add_button("New Game", new_game)
+
+# call new_game 
+new_game()
+
+# ----------- END
