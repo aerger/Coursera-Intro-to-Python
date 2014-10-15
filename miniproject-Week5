@@ -48,8 +48,8 @@ def new_game():
     paddle1_vel = 0
     paddle2_vel = 0
     ball_vel = 0
-    paddle1_pos = HEIGHT / 2 - HALF_PAD_HEIGHT
-    paddle2_pos = HEIGHT / 2 - HALF_PAD_HEIGHT
+    paddle1_pos = HEIGHT / 2
+    paddle2_pos = HEIGHT / 2
     
     # start the game with a new ball
     spawn_ball(random.choice([RIGHT,LEFT]))
@@ -165,6 +165,9 @@ def keyup(key):
 # create frame
 frame = simplegui.create_frame("Pong", WIDTH, HEIGHT)
 frame.set_canvas_background('#505050')
+frame.add_button('Restart', new_game)
+
+#handlers
 frame.set_draw_handler(draw)
 frame.set_keydown_handler(keydown)
 frame.set_keyup_handler(keyup)
