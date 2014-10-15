@@ -18,6 +18,7 @@ HALF_PAD_WIDTH = PAD_WIDTH / 2
 HALF_PAD_HEIGHT = PAD_HEIGHT / 2
 LEFT = False
 RIGHT = True
+PAUSE = False
 score1 = 0
 score2 = 0
 ball_pos = [0,0]
@@ -32,6 +33,10 @@ paddle2_pos = 0
 # if direction is RIGHT, the ball's velocity is upper right, else upper left
 def spawn_ball(direction):
     global ball_pos, ball_vel # these are vectors stored as lists
+    
+    # timer delay launch of ball
+    spawn.start()
+    
     ball_pos = [WIDTH/2,HEIGHT/2]
     
     # negate the velocity to switch directions, left <-> right
@@ -48,6 +53,7 @@ def new_game():
     global paddle1_pos, paddle2_pos, paddle1_vel, paddle2_vel  # these are numbers
     global score1, score2  # these are ints
     global ball_vel
+    global PAUSE
     
     # reset scores and paddle data
     score1 = 0
@@ -57,19 +63,30 @@ def new_game():
     ball_vel = [0,0]
     paddle1_pos = HEIGHT / 2
     paddle2_pos = HEIGHT / 2
+    PAUSE = False
     
     # start the game with a new ball
-    spawn.start()
     spawn_ball(random.choice([RIGHT,LEFT]))
     
 def draw(canvas):
     global score1, score2, paddle1_pos, paddle2_pos, ball_pos, ball_vel
-        
+    
+    
+    
     # draw mid line and gutters
     canvas.draw_line([WIDTH / 2, 0],[WIDTH / 2, HEIGHT], 1, "White")
     canvas.draw_line([PAD_WIDTH, 0],[PAD_WIDTH, HEIGHT], 1, "White")
     canvas.draw_line([WIDTH - PAD_WIDTH, 0],[WIDTH - PAD_WIDTH, HEIGHT], 1, "White")
         
+    if PAUSE:
+        canvas.draw_text('P A U S E D', 
+                         [(WIDTH - frame.get_canvas_textwidth('P A U S E D',36,'monospace'))/2, 
+                          HEIGHT/2],36,'White', 'monospace')
+        # draw scores
+        canvas.draw_text(str(score1).rjust(2, '0'), (PAD_WIDTH + 10, 40), 36, 'White', 'monospace')
+        canvas.draw_text(str(score2).rjust(2, '0'), (WIDTH - PAD_WIDTH - 50, 40), 36, 'White', 'monospace')
+        return
+    
     if not(spawn.is_running()):
         # update ball
         # check for horizontal bounds (gutters, paddles)
@@ -106,15 +123,15 @@ def draw(canvas):
     
         # draw ball (and if you uncomment a few lines, a ball face, haha)
         canvas.draw_circle([ball_pos[0],ball_pos[1]],BALL_RADIUS,2,'Yellow','Yellow')
-        canvas.draw_circle([ball_pos[0] - BALL_RADIUS/2, ball_pos[1] - BALL_RADIUS/3], 6, 2,'Black','White')
-        canvas.draw_circle([ball_pos[0] + BALL_RADIUS/2, ball_pos[1] - BALL_RADIUS/3], 6, 2,'Black','White')
-        canvas.draw_circle([ball_pos[0] - BALL_RADIUS/2, ball_pos[1] - BALL_RADIUS/3], 1, 1, 'Black','Black')
-        canvas.draw_circle([ball_pos[0] + BALL_RADIUS/2, ball_pos[1] - BALL_RADIUS/3], 1, 1, 'Black','Black')
-        canvas.draw_circle([ball_pos[0], ball_pos[1] + BALL_RADIUS/2], 6, 2, 'Red','Black') 
+#        canvas.draw_circle([ball_pos[0] - BALL_RADIUS/2, ball_pos[1] - BALL_RADIUS/3], 6, 2,'Black','White')
+#        canvas.draw_circle([ball_pos[0] + BALL_RADIUS/2, ball_pos[1] - BALL_RADIUS/3], 6, 2,'Black','White')
+#        canvas.draw_circle([ball_pos[0] - BALL_RADIUS/2, ball_pos[1] - BALL_RADIUS/3], 1, 1, 'Black','Black')
+#        canvas.draw_circle([ball_pos[0] + BALL_RADIUS/2, ball_pos[1] - BALL_RADIUS/3], 1, 1, 'Black','Black')
+#        canvas.draw_circle([ball_pos[0], ball_pos[1] + BALL_RADIUS/2], 6, 2, 'Red','Black') 
         
     else:
-        canvas.draw_text('Get ready...', 
-                         [(WIDTH - frame.get_canvas_textwidth('Get ready...',36,'monospace'))/2, 
+        canvas.draw_text('G E T   R E A D Y', 
+                         [(WIDTH - frame.get_canvas_textwidth('G E T  R E A D Y',36,'monospace'))/2, 
                           HEIGHT/2],36,'White', 'monospace')
     
     # update paddle's vertical position, keep paddle on the screen
@@ -179,15 +196,31 @@ def keyup(key):
         paddle2_vel = 0
 
 def spawner():
+    # shuts down our ballspawn timer so it doesn't
+    # keep activating
     spawn.stop()
-        
+
+def pause():
+    global PAUSE
+    
+    PAUSE = not(PAUSE)
+    
+    if PAUSE:
+        pausebutton.set_text('Resume')
+    else:
+        pausebutton.set_text('Pause')
+    
 # create frame
 frame = simplegui.create_frame("Pong", WIDTH, HEIGHT)
 frame.set_canvas_background('#505050')
 frame.add_button('Restart', new_game)
-spawn = simplegui.create_timer(2000, spawner)
+frame.add_label('')
+pausebutton = frame.add_button('Pause', pause)
 
-#handlers
+# timers
+spawn = simplegui.create_timer(1000, spawner)
+
+# handlers
 frame.set_draw_handler(draw)
 frame.set_keydown_handler(keydown)
 frame.set_keyup_handler(keyup)
