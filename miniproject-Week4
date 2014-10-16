@@ -142,10 +142,7 @@ def score_timer_handler():
 
 # define draw handler
 def draw(canvas):
-    
-    # darker grey background (text will be white)
-    frame.set_canvas_background('#505050')
-    
+
     # display score and number of tries as we play,
     # centered across the canvas
     scoretext = str(score) + "/" + str(tries)
@@ -175,6 +172,9 @@ frame.add_button("Stop", stop, 100)
 frame.add_label("") #whitespace
 frame.add_button("Reset", reset, 100)
 
+# darker grey background (text will be white)
+frame.set_canvas_background('#505050')
+    
 # create timer, register event and timer handlers
 # game timer fires every tenth of a second (100ms)
 # when active; score timer, 1 second (1000ms)
