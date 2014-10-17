@@ -276,7 +276,6 @@ def draw(canvas):
         if RUNNING:
             gr_xoffset = random.randrange(6) - 3
             gr_yoffset = random.randrange(6) - 3
-            print gr_xoffset, gr_yoffset
             canvas.draw_text('G E T  R E A D Y', 
                              [(WIDTH - frame.get_canvas_textwidth('G E T  R E A D Y',36,'monospace'))/2 + gr_xoffset, 
                               HEIGHT/2 + gr_yoffset - 30],36,'Black', 'monospace')
