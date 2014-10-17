@@ -11,18 +11,31 @@
 #
 # ProTip: the paddles are movable during this time...
 #
+# Game-restart button restarts the game, running immediately.
+#
 # There's also a pause mode to pause the game if you need a
 # break. I have also implemented a super-deluxe "fancy ball"
 # mode, which is about as groundbreaking as it sounds. ;)
 # 
-# The game rubric says the ball must fire immediately,
-# but mine does not because I wanted the slight delay so
-# the player could prepare for the ball to send. Didn't
-# seem very fair otherwise. I hope peer evaluators understand
-# that the game DOES run immediately when the play button
-# in Codeskulptor is pressed, so the requirement IS
-# satisfied; I just added a very purposeful delay to make
-# the game more playable and fun.
+# Fancyball has eyes that track in the direction the ball
+# is traveling. This might be considered cheating by some,
+# but I think it's just an interesting additional way to
+# indicate the direction the ball's already traveling.
+#
+# There is a game-reset button to kick the game back to the 
+# "title screen" where it's not yet running, to take a break,
+# whatever. A better version of the game-restart, really.
+#
+# I added key equivalents for the button toggles:
+# Q: Game reset
+# R: Game restart
+# N: New game
+# P: Pause toggle
+# F: Fancyball toggle
+#
+# Key toggles are unavailable in the same ways the buttons
+# themselves are, for consistency, eg. can't pause a game
+# that's not running. And so on.
 #
 # I try to comment these things a LOT. Hopefully it helps
 # someone. :) Leave your username in the feedback if you
@@ -55,17 +68,18 @@ HALF_PAD_HEIGHT = PAD_HEIGHT / 2
 LEFT = False
 RIGHT = True
 PAUSE = False
+RUNNING = False
 # Change FANCYBALL to True here if you want fancy-ball mode
 # to be the default-on each time the program's executed:
 FANCYBALL = False
 score1 = 0
 score2 = 0
-ball_pos = [0,0]
+ball_pos = [WIDTH/2,HEIGHT/2]
 ball_vel = [0,0]
 paddle1_vel = 0
 paddle2_vel = 0
-paddle1_pos = 0
-paddle2_pos = 0
+paddle1_pos = HEIGHT/2
+paddle2_pos = HEIGHT/2
 # (that's a lot of globals, yeesh)
 
 def spawn_ball(direction):
@@ -97,6 +111,14 @@ def spawn_ball(direction):
     # according to the project description/rubric
     ball_vel[1] = -(random.randrange(120, 240)/60.0)
 
+def restart():
+    """
+    Restart button will only work if the game's already running.
+    """
+    
+    if RUNNING:
+        new_game()
+    
 # define event handlers
 def new_game():
     """
@@ -107,13 +129,14 @@ def new_game():
     that players could choose their desired mode during gameplay
     and not have to constantly switch it back each time they
     restart. It of course resets each time the entire program 
-    is executed.
+    is executed. Code is left intact to uncomment if you desire
+    a different functionality
     """
     
     global paddle1_pos, paddle2_pos, paddle1_vel, paddle2_vel  # these are numbers
     global score1, score2  # these are ints
     global ball_vel
-    global PAUSE, FANCYBALL
+    global PAUSE, FANCYBALL, RUNNING
     
     # reset scores, paddle data, ball velocity
     score1 = 0
@@ -126,11 +149,13 @@ def new_game():
     # game starts out NOT paused
     PAUSE = False
     pausebutton.set_text('Pause')
-    # uncomment these next two lines if you want the 
+    # Game's running
+    RUNNING = True
+    # uncomment this next line if you want the 
     # fancyball mode to reset to plain-ball every 
     # time you restart:
-    #FANCYBALL = False
-    #fancy_text()
+    # FANCYBALL = False
+    # fancyball()
     
     # start the game with a new ball
     spawn_ball(random.choice([RIGHT,LEFT]))
@@ -141,10 +166,11 @@ def draw_scores(canvas):
     in white and black, offset, for better visual effect.
     """
     
-    canvas.draw_text(str(score1).rjust(2, '0'), (PAD_WIDTH + 10, 40), 36, 'Black', 'monospace')
+    canvas.draw_text(str(score1).rjust(2, '0'), (PAD_WIDTH + 20, 40), 36, 'Black', 'monospace')
     canvas.draw_text(str(score2).rjust(2, '0'), (WIDTH - PAD_WIDTH - 50, 40), 36, 'Black', 'monospace')
-    canvas.draw_text(str(score1).rjust(2, '0'), (PAD_WIDTH + 10 - 4, 40), 36, 'White', 'monospace')
-    canvas.draw_text(str(score2).rjust(2, '0'), (WIDTH - PAD_WIDTH - 50 - 4, 40), 36, 'White', 'monospace')
+    
+    canvas.draw_text(str(score1).rjust(2, '0'), (PAD_WIDTH + 20 - 4, 40 - 2), 36, 'White', 'monospace')
+    canvas.draw_text(str(score2).rjust(2, '0'), (WIDTH - PAD_WIDTH - 50 - 4, 40 - 2), 36, 'White', 'monospace')
     return   
 
 def draw_ball(canvas):
@@ -153,12 +179,36 @@ def draw_ball(canvas):
     fancy bits as well.
     """
     
+    # plain old yellow ball
     canvas.draw_circle([ball_pos[0],ball_pos[1]],BALL_RADIUS,2,'Yellow','Yellow')
+
+    # fancy? yes!
     if FANCYBALL:
+        # the whites of the eyes
         canvas.draw_circle([ball_pos[0] - BALL_RADIUS/2, ball_pos[1] - BALL_RADIUS/3], 6, 2,'Black','White')
         canvas.draw_circle([ball_pos[0] + BALL_RADIUS/2, ball_pos[1] - BALL_RADIUS/3], 6, 2,'Black','White')
-        canvas.draw_circle([ball_pos[0] - BALL_RADIUS/2, ball_pos[1] - BALL_RADIUS/3], 1, 1, 'Black','Black')
-        canvas.draw_circle([ball_pos[0] + BALL_RADIUS/2, ball_pos[1] - BALL_RADIUS/3], 1, 1, 'Black','Black')
+        
+        # look like we look where we're going
+        # temp vars to get pupil angles
+        eye_vel0= ball_vel[0]
+        eye_vel1 = ball_vel[1]
+        
+        # let's keep the pupils inside the whites...
+        if eye_vel0 > 2:
+            eye_vel0 = 2
+        elif eye_vel0 < -2:
+            eye_vel0 = -2
+        if eye_vel1 > 2:
+            eye_vel1 = 2
+        elif eye_vel1 < -2:
+            eye_vel1 = -2
+            
+        canvas.draw_circle([ball_pos[0] - BALL_RADIUS/2 + eye_vel0, 
+                            ball_pos[1] - BALL_RADIUS/3 + eye_vel1], 1, 1, 'Black','Black')
+        canvas.draw_circle([ball_pos[0] + BALL_RADIUS/2 + eye_vel0, 
+                            ball_pos[1] - BALL_RADIUS/3 + eye_vel1], 1, 1, 'Black','Black')
+        
+        # mouthy mouth-mouth
         canvas.draw_circle([ball_pos[0], ball_pos[1] + BALL_RADIUS/2], 6, 2, 'Red','Black') 
        
 def draw(canvas):
@@ -177,34 +227,65 @@ def draw(canvas):
     #draw the ball
     draw_ball(canvas)
     
+    if not(RUNNING):
+        # lay down the PONG title
+        canvas.draw_text('P O N G', 
+                          [(WIDTH - frame.get_canvas_textwidth('P O N G',36,'monospace'))/2, 
+                          HEIGHT/2 - 30],36,'Black', 'monospace')
+        canvas.draw_text('P O N G', 
+                          [(WIDTH - 3 - frame.get_canvas_textwidth('P O N G',36,'monospace'))/2, 
+                          HEIGHT/2 - 3 - 30],36,'White', 'monospace')
+        # display info on how to start the game, in a flashy way
+        if int(time.time()*10) % 6 >= 1:
+            canvas.draw_text('NEW GAME to start', 
+                              [(WIDTH - frame.get_canvas_textwidth('NEW GAME to start',20,'monospace'))/2, 
+                              HEIGHT/2 + 55],20,'Black', 'monospace')
+            canvas.draw_text('NEW GAME to start', 
+                              [(WIDTH - 3 - frame.get_canvas_textwidth('NEW GAME to start',20,'monospace'))/2, 
+                              HEIGHT/2 - 3 + 55],20,'White', 'monospace')
+        # show me some controls info too
+        canvas.draw_text('Left Paddle: W/S keys   Right Paddle: Up/Down arrows', 
+                          [(WIDTH - frame.get_canvas_textwidth('Left Paddle: W/S keys   Right Paddle: Up/Down arrows',16,'monospace'))/2, 
+                          HEIGHT - 30],16,'Black', 'monospace')
+        canvas.draw_text('Left Paddle: W/S keys   Right Paddle: Up/Down arrows', 
+                          [(WIDTH - 2 - frame.get_canvas_textwidth('Left Paddle: W/S keys   Right Paddle: Up/Down arrows',16,'monospace'))/2, 
+                          HEIGHT - 2 - 30],16,'White', 'monospace')
+        
     # Is the game paused? Show a pause message and the scores
     if PAUSE:
-        # draw scores; I want the scores present while
-        # the game is paused, so player can change the 
-        # ball appearance to fancy/plain as desired
+        # draw the scores; I want the scores present while
+        # the game is paused
         draw_scores(canvas)
         # flash our pause message by displaying it only on an interval
-        if int(time.time()*10) % 3 <> 0:
+        if int(time.time()*10) % 6 >= 1:
             canvas.draw_text('P A U S E D', 
                              [(WIDTH - frame.get_canvas_textwidth('P A U S E D',36,'monospace'))/2, 
-                              HEIGHT/2],36,'Black', 'monospace')
+                              HEIGHT/2 - 30],36,'Black', 'monospace')
             canvas.draw_text('P A U S E D', 
                              [(WIDTH - 4 - frame.get_canvas_textwidth('P A U S E D',36,'monospace'))/2, 
-                              HEIGHT/2 - 4],36,'White', 'monospace')
-        # we're paused; get outta here
+                              HEIGHT/2 - 4 - 30],36,'White', 'monospace')
+        # we're paused; bail outta the draw handler until we're not
         return
     
     # while waiting for the ball to spawn, we disable ball updates
     if spawn.is_running():
         # waiting for ball to spawn, show a 'get ready' message    
         # SHAKE IT LIKE A POLAROID PICTURE
-        gr_offset = random.randrange(6) - 3
-        canvas.draw_text('G E T  R E A D Y', 
-                         [(WIDTH - frame.get_canvas_textwidth('G E T  R E A D Y',36,'monospace'))/2, 
-                          HEIGHT/2 + gr_offset],36,'Black', 'monospace')
-        canvas.draw_text('G E T  R E A D Y',
-                         [(WIDTH - 4 - frame.get_canvas_textwidth('G E T  R E A D Y',36,'monospace'))/2, 
-                          HEIGHT/2 - 4 + gr_offset],36,'White', 'monospace')
+        # (but only if the game's actually running; this prevents
+        # the game from showing the message if game-reset button is pressed)
+        if RUNNING:
+            gr_xoffset = random.randrange(6) - 3
+            gr_yoffset = random.randrange(6) - 3
+            print gr_xoffset, gr_yoffset
+            canvas.draw_text('G E T  R E A D Y', 
+                             [(WIDTH - frame.get_canvas_textwidth('G E T  R E A D Y',36,'monospace'))/2 + gr_xoffset, 
+                              HEIGHT/2 + gr_yoffset - 30],36,'Black', 'monospace')
+            canvas.draw_text('G E T  R E A D Y',
+                             [(WIDTH - frame.get_canvas_textwidth('G E T  R E A D Y',36,'monospace'))/2 - 4 + gr_xoffset, 
+                              HEIGHT/2 - 4 + gr_yoffset - 30],36,'White', 'monospace')
+        else:
+            # game's not running because we reset, so stop the ball-spawn timer altogether
+            spawn.stop()
     # we resume normal play here, as no pause or spawn in progress
     else:    
         # update ball
@@ -294,7 +375,20 @@ def keydown(key):
     """
     
     global paddle1_vel, paddle2_vel
-
+    
+    # fancyball toggle
+    # we'll check these two keys even when in menu screen
+    # fancyball toggle
+    if key == simplegui.KEY_MAP['f']:
+        fancyball()
+    # new game key
+    elif key == simplegui.KEY_MAP['n']:
+        new_game()
+        
+    # disable keys if not running
+    if not(RUNNING):
+        return
+    
     #paddle1 (left)
     if key == simplegui.KEY_MAP['s']:
         paddle1_vel += 5
@@ -307,6 +401,16 @@ def keydown(key):
     elif key == simplegui.KEY_MAP['up']:
         paddle2_vel -= 5
     
+    # other keys we wanna check
+    # restart key
+    elif key == simplegui.KEY_MAP['r']:
+        restart()
+    # pause key
+    elif key == simplegui.KEY_MAP['p']:
+        pause()
+    elif key == simplegui.KEY_MAP['q']:
+        gamereset()
+        
 def keyup(key):
     """
     Releasing a key resets the speed of the paddle to zero
@@ -316,6 +420,10 @@ def keyup(key):
     
     global paddle1_vel, paddle2_vel
 
+    # disable keys if not running
+    if not(RUNNING):
+        return
+    
     # paddle1 (left)
     if key == simplegui.KEY_MAP['s']:
         paddle1_vel = 0
@@ -327,7 +435,7 @@ def keyup(key):
         paddle2_vel = 0
     elif key == simplegui.KEY_MAP['up']:
         paddle2_vel = 0
-
+                
 def spawner():
     """
     Shuts down our ballspawn timer immediately 
@@ -349,12 +457,16 @@ def pause():
     
     global PAUSE
     
+    if not(RUNNING):
+        return
+    
     PAUSE = not(PAUSE)
     if PAUSE:
-        pausebutton.set_text('Resume')
+        pausebutton.set_text('Resume [P]')
     else:
-        pausebutton.set_text('Pause')
-        spawn.start()
+        pausebutton.set_text('[P]ause')
+        if RUNNING:
+            spawn.start()
 
 def fancy_text():
     """
@@ -365,10 +477,10 @@ def fancy_text():
     """
     
     if FANCYBALL:
-        fancybutton.set_text('Plain Ball')
+        fancybutton.set_text('Plain Ball [F]')
         fancylabel.set_text('FANCY ball selected!')       
     else:
-        fancybutton.set_text('Fancy Ball')
+        fancybutton.set_text('[F]ancy Ball')
         fancylabel.set_text('Plain ball selected.')
 
 def fancyball():
@@ -383,22 +495,57 @@ def fancyball():
     FANCYBALL = not(FANCYBALL)
     fancy_text()
     
+def gamereset():
+    """
+    Definitely some duplicated code here, resetting
+    variables already found in new_game(), but without 
+    any of the ball spawning.
+    """
+    
+    global paddle1_pos, paddle2_pos, paddle1_vel, paddle2_vel  # these are numbers
+    global score1, score2  # these are ints
+    global ball_vel, ball_pos
+    global PAUSE, RUNNING, FANCYBALL
+    
+    # reset scores, paddle data, ball velocity
+    score1 = 0
+    score2 = 0
+    paddle1_vel = 0
+    paddle2_vel = 0
+    paddle1_pos = HEIGHT / 2
+    paddle2_pos = HEIGHT / 2
+    ball_vel = [0,0]
+    ball_pos = [WIDTH/2,HEIGHT/2]
+    
+    # game starts out NOT paused
+    PAUSE = False
+    pausebutton.set_text('[P]ause')
+    
+    #stop the game running
+    RUNNING = False
+    
+    #reset the fancyball
+    FANCYBALL = False
+    fancy_text()
+    
 # create frame and all the stuff that goes with it
 frame = simplegui.create_frame("Pong", WIDTH, HEIGHT)
 frame.set_canvas_background('#505050')
 frame.add_label('P O N G: The Game')
 frame.add_label('Plays forever. No quarters!')
 frame.add_label('')
+frame.add_label('')
+# New Game button
+frame.add_button('[N]EW GAME', new_game, 100)
+frame.add_label('')
 # Restart button
-frame.add_button('Restart', new_game, 100)
+frame.add_button('[R]estart', restart, 100)
 frame.add_label('')
 # Pause button
-pausebutton = frame.add_button('Pause', pause, 100)
+pausebutton = frame.add_button('[P]ause', pause, 100)
 # whitespace to offset fancy-mode stuff
 frame.add_label('')
-frame.add_label('')
-frame.add_label('')
-frame.add_label('')
+frame.add_button('Reset/[Q]uit game', gamereset, 100)
 frame.add_label('')
 frame.add_label('')
 frame.add_label('')
@@ -418,9 +565,11 @@ frame.set_draw_handler(draw)
 frame.set_keydown_handler(keydown)
 frame.set_keyup_handler(keyup)
 
-# start the game, start the frame
+# start the frame
 # after this, nothing's the same
-new_game()
 frame.start()
+
+print 'Thanks for playing my game!'
+print 'All feedback appreciated!'
 
 # END #################
