@@ -26,7 +26,17 @@
 # "title screen" where it's not yet running, to take a break,
 # whatever. A better version of the game-restart, really.
 #
-# I added key equivalents for the button toggles:
+# Also: PC AI player! You can play against the computer.
+# Just click the "PC AI" toggle to make the right-side player
+# be controlled by a rudimentary, entirely-non-sentient
+# intelligence. Some randomness involved, so it can in fact
+# lose. Give it a try!
+#
+# I will mention that the AI addition seems to exacerbate the
+# key lag problem on the left/human side. Unlikely there is a
+# fix for this as long as we're using Codeskulptor. :|
+# 
+# I added key equivalents for the button toggles (except PC AI):
 # Q: Game reset
 # R: Game restart
 # N: New game
@@ -72,6 +82,7 @@ RUNNING = False
 # Change FANCYBALL to True here if you want fancy-ball mode
 # to be the default-on each time the program's executed:
 FANCYBALL = False
+PCPLAYS = False
 score1 = 0
 score2 = 0
 ball_pos = [WIDTH/2,HEIGHT/2]
@@ -136,8 +147,10 @@ def new_game():
     global paddle1_pos, paddle2_pos, paddle1_vel, paddle2_vel  # these are numbers
     global score1, score2  # these are ints
     global ball_vel
-    global PAUSE, FANCYBALL, RUNNING
+    global PAUSE, FANCYBALL, RUNNING, PCPLAYS
     
+    # turn off right player PC AI
+    # PCPLAYS = False
     # reset scores, paddle data, ball velocity
     score1 = 0
     score2 = 0
@@ -211,6 +224,29 @@ def draw_ball(canvas):
         # mouthy mouth-mouth
         canvas.draw_circle([ball_pos[0], ball_pos[1] + BALL_RADIUS/2], 6, 2, 'Red','Black') 
        
+def pcturn():
+    """
+    PC can play the right side. I basically check
+    for the ball and move the paddle a random distance
+    toward the ball's Y value. This allows the PC
+    player to lose somewhat organically.
+    
+    You can make it cheat by always setting
+    the paddle EXACTLY to the Y position of 
+    the ball. Comment out the random.choice()
+    lines below and uncomment the other two lines
+    below, for an unbeatable AI opponent. ;)
+    """
+    
+    global paddle2_pos
+    
+    if paddle2_pos < ball_pos[1]:
+        #paddle2_pos = ball_pos[1]
+        paddle2_pos += random.choice([3,4,5,6])
+    elif paddle2_pos > ball_pos[1]:
+        #paddle2_pos = ball_pos[1]
+        paddle2_pos -= random.choice([3,4,5,6])
+                                     
 def draw(canvas):
     """
     The draw handler for the game. Where most of the magic happens.
@@ -227,6 +263,10 @@ def draw(canvas):
     #draw the ball
     draw_ball(canvas)
     
+    # Let AI play if on
+    if PCPLAYS:
+        pcturn()
+            
     if not(RUNNING):
         # lay down the PONG title
         canvas.draw_text('P O N G', 
@@ -323,6 +363,8 @@ def draw(canvas):
             ball_vel[1] = - ball_vel[1]
         else:    
             ball_pos[1] += ball_vel[1]
+    
+    
     
     # update paddle's vertical position, keep paddle on the screen
     # paddle1 (left)
@@ -527,6 +569,16 @@ def gamereset():
     FANCYBALL = False
     fancy_text()
     
+def pcplayONOFF():
+    global PCPLAYS
+    
+    PCPLAYS = not PCPLAYS
+    
+    if PCPLAYS:
+        pcplayer.set_text('Human')
+    else:
+        pcplayer.set_text('PC AI')
+    
 # create frame and all the stuff that goes with it
 frame = simplegui.create_frame("Pong", WIDTH, HEIGHT)
 frame.set_canvas_background('#505050')
@@ -546,7 +598,7 @@ pausebutton = frame.add_button('[P]ause', pause, 100)
 frame.add_label('')
 frame.add_button('Reset/[Q]uit game', gamereset, 100)
 frame.add_label('')
-frame.add_label('')
+pcplayer = frame.add_button('PC AI', pcplayONOFF, 100)
 frame.add_label('')
 # fancy mode UI stuff
 frame.add_label("Optional 'fancy ball' mode")
