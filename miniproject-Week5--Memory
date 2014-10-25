@@ -1,0 +1,229 @@
+#
+# implementation of card game - Memory
+#
+# October 2014
+#
+# basic implementation of a Memory game. Code is
+# somewhat flexible for many cards in a fixed-size
+# canvas, but is designed with 16 total cards in
+# mind, across a single row, as described in the
+# project description
+#
+# I normally add a lot of bells and whistles to
+# these projects, but I had a busy week dealing
+# with family stuff, so you get a seriously 
+# vanilla, boring version. Sorry!
+#
+# Please give feedback as necessary--I'm here
+# to learn!
+#
+
+#imports
+import simplegui
+import random
+
+#globals
+# init the main lists
+deck = []
+card_pos = []
+exposed = []
+# canvas width and height
+WIDTH = 800
+HEIGHT = 100
+# number of cards in game
+NUM_NUMBERS = 16
+# width of cards based on how many cards
+CARD_WIDTH = WIDTH/NUM_NUMBERS
+# display offset
+OFFSET = CARD_WIDTH / 2
+# game state
+state = 0
+# number of turns
+turns = 0
+# indices for checking possible matches
+index1 = 0
+index2 = 0
+
+def new_game():
+    """
+    Starts a new game; clears out all the necessary variables
+    to make a new game possible.
+    """
+    
+    global deck, card_pos, exposed, state, turns, index1, index2
+    
+    # reset game state and turns
+    state = 0
+    turns = 0
+    
+    # reset card comparison indices
+    index1 = 0
+    index2 = 0
+    
+    # initialize the exposed list,
+    # hiding all cards
+    exposed = range(NUM_NUMBERS)
+    exposed = [False for exp in exposed]
+        
+    # set up the full deck
+    # by combining two decks of same numbers
+    deck = range(NUM_NUMBERS/2)
+    temp = range(NUM_NUMBERS/2)
+    deck.extend(temp)
+    random.shuffle(deck)
+    
+    #DEBUG STUFF...left in for the curious
+    #print deck
+    #print "state:",state
+    #print "turns:",turns
+    
+    # save a list of card positions
+    for card in range(len(deck)):
+        card_pos.append(OFFSET + (card * CARD_WIDTH))
+     
+# define event handlers
+def mouseclick(pos):
+    """
+    The mouseclick handler, where we're doing the
+    bulk of the work in this project.
+    
+    We create a pretty simple state machine
+    to track where we are in the card-turning
+    process, commented further below.
+    
+    Notice we make sure we're not flipping 
+    cards that are already flipped; we don't
+    do this for state 0 because it's not
+    possible to be in this state with that
+    issue.
+    
+    We also track the turns count.
+    """
+    
+    global exposed, state, turns, index1, index2
+                         
+    # which card position? THIS card position
+    selected = pos[0]/CARD_WIDTH
+
+    #fire up the state machine...
+    #
+    # State 0 is the initial card turn-over
+    if state == 0:
+        exposed[selected] = True       
+        index1 = selected
+        state = 1
+    # State 1 is the flip of the second card
+    elif state == 1:
+        if not(exposed[selected]):
+            exposed[selected] = True
+            index2 = selected
+            state = 2
+    # State 2 is where we check for matches
+    elif state == 2:
+        if not(exposed[selected]):
+            exposed[selected] = True
+            state = 1
+            # a match means we leave them exposed
+            # and use the most recent click as
+            # the next starting card
+            if deck[index1] == deck[index2]:
+                index1 = selected
+            # otherwise we hide those cards
+            # not matching and let the game
+            # continue...
+            else:
+                exposed[index1] = False
+                exposed[index2] = False
+                index1 = selected
+    
+    # check to see if the game's been won
+    if exposed.count(True) <> NUM_NUMBERS:
+        # only add a turn if we've turned the second card
+        if state == 2:
+            turns += 1
+    else:
+        # adds the final winning turn
+        # because of how we check turns.
+        # It's not ideal, but it works...
+        turns += 1
+            
+def draw_card(canvas):
+    """
+    Here we draw the cards or the numbers, depending
+    on whether they're exposed to us or not.
+    
+    Exposed cards, we show the number. Hidden cards,
+    we keep them hidden behind the 'card back' (a
+    simple color in my case here).
+    """
+    
+    # there's some funky magic-number stuff going on in here
+    # that I wouldn't normally do, but I have so little
+    # control over fonts in Codeskulptor... I fudged it
+    # for getting the display 'close enough' with the
+    # fonts and sizes we have to work with... I used to
+    # do machine-language coding a LONG time ago, and 
+    # this really isn't that weird, ultimately... ;)
+    for card in range(len(deck)):
+        if exposed[card]:
+            canvas.draw_text(str(deck[card]), [card_pos[card] - 6, 60], CARD_WIDTH - OFFSET/1.5, 'White', 'monospace') 
+        else:
+            canvas.draw_polygon([[card_pos[card] - OFFSET, 0],[card_pos[card] - OFFSET, 100], 
+                                 [card_pos[card] + OFFSET, 100], [card_pos[card] + OFFSET, 0]], 5, '#505050', 'Gray')
+    
+def draw(canvas):
+    """
+    Here we're drawing a few things...
+    
+    The card draw was pulled out for some reason early; 
+    wanted to keep this handler 'clean' I guess. Turns
+    out it probably wasn't all that necessary to separate
+    it out.
+    """
+    
+    # call the card drawing function
+    draw_card(canvas)
+    
+    # Update labels with number of turns
+    # or winning statement when game is won
+    if exposed.count(True) == NUM_NUMBERS:
+        turns_label.set_text('Turns: ' + str(turns) + ' -- YOU WIN!')
+        restart_label.set_text('Press RESET to restart!')
+    else:
+        turns_label.set_text('Turns: ' + str(turns))
+        restart_label.set_text('')
+    
+# create frame and add a button and labels
+frame = simplegui.create_frame("Memory", WIDTH, HEIGHT)
+frame.set_canvas_background("#505050")
+frame.add_button("Reset", new_game)
+turns_label = frame.add_label("Turns: 0")
+restart_label = frame.add_label("")
+
+# register event handlers
+frame.set_mouseclick_handler(mouseclick)
+frame.set_draw_handler(draw)
+
+# get things rolling
+new_game()
+frame.start()
+
+
+print """MEMORY
+------
+    
+Thanks for playing my bare-bones,
+utterly-vanilla Memory game!
+    
+There's nothing fancy going on
+here, but I hope you like it. 
+    
+All feedback appreciated!
+
+Thanks!
+(and good luck with 
+Blackjack next week!)
+"""
+
+    
+## END #######################
