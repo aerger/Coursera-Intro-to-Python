@@ -120,7 +120,9 @@ def mouseclick(pos):
             state = 2
     # State 2 is where we check for matches
     elif state == 2:
-        if not(exposed[selected]):
+        if exposed[selected]:
+            return
+        else:
             exposed[selected] = True
             state = 1
             # a match means we leave them exposed
