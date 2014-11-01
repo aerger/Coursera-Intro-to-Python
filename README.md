@@ -8,3 +8,5 @@ There's no Week 1 project here, as it was simply a one-liner along the lines of 
 Most of these I bang out over a few hours in an evening; there may well be errors, but it's an intro course, so hey. :P
 
 I'll also add that the course is pretty good as an intro course to Python, so if you're looking, I'd say I recommend it. Subject to change, and YMMV, of course.
+
+There is a fair amount of handholding via provided templates that I found almost distracting, guiding you to write your projects a certain way each week, but you don't have to use them... But either way, you'll still potentially learn quite a bit.
