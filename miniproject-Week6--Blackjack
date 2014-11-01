@@ -1,25 +1,25 @@
 #
 # Mini-project #6 - Blackjack
 # October 2014
-# agf
+# --agf
 #
 # This is a heinously rudimentary version of Blackjack.
 # 
 # Every new deal of the cards is from a fresh deck. 
 # Dealer wins ties.
-# Scoring is 1 point each time you a hand is won.
+# Scoring is 1 point each time a hand is won, by either
+# the player or the dealer.
 # 
-# No bells or whistles this time, except the standard
-# grey/white color scheme I've used for all of my
-# projects so far. Cards are not grey/white, but
-# that's OK.
+# No real bells or whistles this time, except the 
+# standard grey/white color scheme I've used for 
+# all of my projects so far. Cards are not grey/white,
+# but that's OK.
 #
 # All feedback appreciated!
 #
 
 #imports
-import simplegui
-import random
+import simplegui, random, time
 
 # load card sprite - 936x384 - source: jfitz.com
 CARD_SIZE = (72, 96)
@@ -30,12 +30,12 @@ CARD_BACK_SIZE = (72, 96)
 CARD_BACK_CENTER = (36, 48)
 card_back = simplegui.load_image("http://storage.googleapis.com/codeskulptor-assets/card_jfitz_back.png")    
 
-# initialize some useful global variables
+# initialize global variables
 in_play = False
 outcome = ""
 playerScore = 0
 dealerScore = 0
-dstr = "! 'Deal' starts a new game!"
+DSTR = "! -- 'Deal' starts a new game!"
 
 # define globals for cards
 SUITS = ('C', 'S', 'H', 'D')
@@ -94,13 +94,14 @@ class Hand:
                 aces += 1
             handval += VALUES[self.hand[c].get_rank()]
         # now check the aces situation
+        # and adjust card count as necessary
         if aces > 0:
             if handval + 10 <= 21:
                 handval += 10
         return handval
                 
     def draw(self, canvas, pos):
-        # draw a hand on the canvas, use the draw method for cards
+        # draw a hand on the canvas, using the draw method for cards
         for c in range(len(self.hand)):
             self.hand[c].draw(canvas, [pos[0] + (c % 8) * CARD_SIZE[0], pos[1] + (c // 8) * CARD_SIZE[1]])
         
@@ -109,6 +110,8 @@ class Deck:
     def __init__(self):
         # create a Deck object
         self.deck = []
+        
+        #populate the deck with cards
         for suit in SUITS:
             for rank in RANKS:
                 self.deck.append(Card(suit,rank))
@@ -119,7 +122,15 @@ class Deck:
         random.shuffle(self.deck)
 
     def deal_card(self):
+        # get the number of cards still in the deck
         l = len(self.deck)
+        
+        # as long as there is at least one card
+        # pull it from the deck 
+        #
+        # the check here should never actually
+        # happen, because we create a fresh deck
+        # with every new round we play
         if l <= 0:
             print "ERROR, out of cards"
             return
@@ -127,7 +138,12 @@ class Deck:
     
     def __str__(self):
         # return a string representing the deck
+        
+        # initialize the string we're building
         deckstr = ""
+        
+        # build a string of cards in the deck,
+        # separated by a space
         for c in range(len(self.deck)):
             deckstr += str(self.deck[c]) + " "
         return deckstr	
@@ -140,7 +156,7 @@ def deal():
     # then someone's trying to re-deal the game
     # and they lose a point to the house for this
     if in_play == True:
-        outcome = "Player FOLDS" + dstr
+        outcome = "Player FOLDS" + DSTR
         dealerScore +=1
         in_play = False
         return
@@ -149,28 +165,28 @@ def deal():
     # create a new deck of cards, create two hands
     # for player and dealer
     in_play = True
-    outcome = "Game in progress! Hit, or Stand?"
+    outcome = "Game in progress -- 'Hit' or 'Stand'?"
     newDeck = Deck()
     playerHand = Hand()
     dealerHand = Hand()
     
-    # load up two cards for each hand
+    # each hand starts with two cards;
     for count in range(2):
         playerHand.add_card(newDeck.deal_card())
         dealerHand.add_card(newDeck.deal_card())
     
 def hit():
-    global in_play, playerHand
+    global playerHand
     
     # if the hand is in play, hit the player
     if in_play:
         # allow the player the ability to screw 
-        # himself over by allowing hits on 21,
-        # although any ace reverts to value of 1
-        # anyway... Still, better like this than not imo
+        # himself over by allowing to hit at 21;
+        # any aces can still revert to value of 1
+        # anyway, as necessary
         if playerHand.get_value() < 22:
             playerHand.add_card(newDeck.deal_card())
-            # if busted, assign a message to outcome, update in_play and score
+        # if busted, assign a message to outcome, update in_play and score
         if playerHand.get_value() > 21:
             updateScore()
     
@@ -179,42 +195,49 @@ def updateScore():
     # and adjusts scores
     global outcome, in_play, dealerScore, playerScore
 
+    # save myself some typing here
     dval = dealerHand.get_value()
     pval = playerHand.get_value()
     
+    # win conditions/checks
+    # outcome messages should make these checks
+    # pretty obvious as to what they are/do
     if dval > 21:
-        outcome = "Dealer BUSTS with " + str(dval) + dstr
+        outcome = "Dealer BUSTS with " + str(dval) + DSTR
         playerScore +=1
         in_play = False
     elif dval <= 21 and dval > pval:
-        outcome = "Dealer WINS with " + str(dval) + dstr
+        outcome = "Dealer WINS with " + str(dval) + DSTR
         dealerScore +=1
         in_play = False
     elif dval == pval:
-        outcome = "Dealer WINS a TIE with " + str(dval) + dstr
+        outcome = "Dealer WINS a TIE with " + str(dval) + DSTR
         dealerScore +=1
         in_play = False
     elif pval > 21:
-        outcome = "Player BUSTS with " + str(pval) + dstr
+        outcome = "Player BUSTS with " + str(pval) + DSTR
         dealerScore +=1
         in_play = False
     elif pval <= 21 and pval > dval:
-        outcome = "Player WINS with " + str(pval) + dstr
+        outcome = "Player WINS with " + str(pval) + DSTR
         playerScore +=1
         in_play = False
 
 def stand():
-    global in_play, dealerHand, outcome, playerScore, dealerScore
+    global in_play, dealerHand
     
     # do not allow standing if game's not active
     if in_play == False:
         return
     
+    # stand ends the play for the round
     in_play = False
     
-    # if hand is in play, repeatedly hit dealer until his hand has value 17 or more
+    # here we repeatedly hit the dealer until his 
+    # hand has value 17 or more
     while dealerHand.get_value() < 17:
         dealerHand.add_card(newDeck.deal_card())
+    
     # assign a message to outcome, update in_play and score
     updateScore()	
         
@@ -222,58 +245,85 @@ def stand():
 def draw(canvas):
     global outcome
     
+    # Text is drawn twice; a black layer offset a bit to enhance
+    # visibility between the white text and the grey background
+    # Also, too many magic numbers throughout for positions, imo
     
     # BLACKJACK game title text
-    canvas.draw_text('B L A C K J A C K', [12,52],36,'Black', 'monospace')
-    canvas.draw_text('B L A C K J A C K', [10,50],36,'White', 'monospace')
+    canvas.draw_text('B L A C K J A C K', [12,52], 36,'Black', 'monospace')
+    canvas.draw_text('B L A C K J A C K', [10,50], 36,'White', 'monospace')
     
     # outcome message text
-    canvas.draw_text(outcome, [14,522], 18,'Black','monospace')
-    canvas.draw_text(outcome, [12,520], 18,'White','monospace')
+    # this time.time() trick blinks the outcome text during a
+    # game; in_play check leaves it solid after a win/loss occurs
+    outcomepos = [12,270] 
+    if int(time.time() * 2) % 2 == 0 or not(in_play):
+        canvas.draw_text(outcome, [outcomepos[0] + 2, outcomepos[1] + 2], 18,'Black','monospace')
+        canvas.draw_text(outcome, outcomepos, 18,'White','monospace')
+    else:
+        canvas.draw_text("", [outcomepos[0] + 2, outcomepos[1] + 2], 18,'Black','monospace')
+        canvas.draw_text("", outcomepos, 18,'White','monospace')
     
-    # display scores
+    # display scores; two-digit padded with 0 for uniformity's sake
     canvas.draw_text("Player: " + str(playerScore).rjust(2,'0'), [452,37], 18,'Black','monospace')
     canvas.draw_text("Player: " + str(playerScore).rjust(2,'0'), [450,35], 18,'White','monospace')
     canvas.draw_text("Dealer: " + str(dealerScore).rjust(2,'0'), [452,57], 18,'Black','monospace')
     canvas.draw_text("Dealer: " + str(dealerScore).rjust(2,'0'), [450,55], 18,'White','monospace')
     
-    # display hand headers
-    canvas.draw_text("Player Hand: (" + str(playerHand.get_value()) + ")", [14,112], 12,'Black','monospace')
-    canvas.draw_text("Player Hand: (" + str(playerHand.get_value()) + ")", [12,110], 12,'White','monospace')
+    # display hand headers with card counts
+    canvas.draw_text("Player hand: (" + str(playerHand.get_value()) + ")", [14,112], 12,'Black','monospace')
+    canvas.draw_text("Player hand: (" + str(playerHand.get_value()) + ")", [12,110], 12,'White','monospace')
     
     # don't give away dealer's card count, though,
     # if a game's still going on
     if in_play:
-        canvas.draw_text("Dealer Hand: (??)", [14,322], 12,'Black','monospace')
-        canvas.draw_text("Dealer Hand: (??)", [12,320], 12,'White','monospace')
+        # hide the dealer count
+        canvas.draw_text("Dealer hand: (??)", [14,322], 12,'Black','monospace')
+        canvas.draw_text("Dealer hand: (??)", [12,320], 12,'White','monospace')
     else:
-        canvas.draw_text("Dealer Hand: (" + str(dealerHand.get_value()) + ")", [14,322], 12,'Black','monospace')
-        canvas.draw_text("Dealer Hand: (" + str(dealerHand.get_value()) + ")", [12,320], 12,'White','monospace')
+        # show the dealer count
+        canvas.draw_text("Dealer hand: (" + str(dealerHand.get_value()) + ")", [14,322], 12,'Black','monospace')
+        canvas.draw_text("Dealer hand: (" + str(dealerHand.get_value()) + ")", [12,320], 12,'White','monospace')
     
     # draw player hands
     playerHand.draw(canvas,[10, 120])
     dealerHand.draw(canvas,[10, 330])
     
-    # keep dealer hole covered during hand play
+    # this keeps the dealer hole covered during hand play
     if in_play:
         canvas.draw_image(card_back, [CARD_BACK_CENTER[0], CARD_BACK_CENTER[1]], [CARD_BACK_SIZE[0], CARD_BACK_SIZE[1]],[10 + CARD_BACK_CENTER[0], 330 + CARD_BACK_CENTER[1]], CARD_BACK_SIZE)    
 
 def new_game():
     global playerScore, dealerScore, in_play
     
+    # resets the scores that aren't reset each Deal
+    # and restarts the game
     playerScore = 0
     dealerScore = 0
     in_play = False
     deal()
         
+def keydown(key):
+    # keyboard shortcuts
+    if key == simplegui.KEY_MAP['S']:
+        stand()
+    elif key == simplegui.KEY_MAP['H']:
+        hit()
+    elif key == simplegui.KEY_MAP['D']:
+        deal()
+    else:
+        return
+    
 # initialization frame
 frame = simplegui.create_frame("Blackjack", 600, 600)
 frame.set_canvas_background("#505050")
 
-#create buttons and canvas callback
+# set up the frame
 frame.add_label("")
 frame.add_label("B L A C K J A C K")
-frame.add_label("It's kind of a big deal")
+frame.add_label("A 'greatly simplified' version")
+frame.add_label("")
+frame.add_label("")
 frame.add_label("")
 frame.add_label("")
 frame.add_button("Deal", deal, 200)
@@ -288,11 +338,21 @@ frame.add_label("")
 frame.add_label("")
 frame.add_label("")
 frame.add_label("")
+frame.add_label("Optional keyboard shortcuts:")
+frame.add_label("[D] - Deal")
+frame.add_label("[H] - Hit")
+frame.add_label("[S] - Stand")
+# there really needs to be a better way
+# than this for positioning these things
 frame.add_label("")
 frame.add_label("")
-frame.add_button("Reset Game/Scores", new_game, 200)
-# draw handlah
+frame.add_label("")
+frame.add_label("")
+frame.add_button("Reset game/scores", new_game, 200)
+
+# draw and key handlahs
 frame.set_draw_handler(draw)
+frame.set_keydown_handler(keydown)
 
 # get things rolling
 frame.start()
@@ -301,11 +361,21 @@ deal()
 print """B L A C K J A C K
 ------------------
 
-Deal starts a new round
-Hit deals player another card
-Stand calls for dealer to show
+Buttons:
+  [Deal] Starts a new round
+  [Hit] Deals player another card
+  [Stand] Calls for dealer to show
 
-All feedback appreciated!
-"""
+  [Reset] resets all scores
+          and starts a new game
+          
+optional keyboard shortcuts:
+  [D] - Deal
+  [H] - Hit
+  [S] - Stand
+
+Thanks for playing my game!
+
+I appreciate any feedback. :)"""
 
 ## END ####################
